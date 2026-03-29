@@ -36,7 +36,7 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         Dense(5*26*26, 10, l2_lambda=l2_lambda)]
     
     losses = []
-    
+    num_of_test_images = min(100000,len(x_test))
     for e in range(epochs):
         error = 0
         for x, y in zip(x_train, y_train):
@@ -55,7 +55,7 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
     
     correct = 0
     wrong = []
-    for x, y, idx in zip(x_test[:samples], y_test[:samples], range(samples)):
+    for x, y, idx in zip(x_test[:num_of_test_images], y_test[:num_of_test_images], range(num_of_test_images)):
         output = x
         for layer in network:
             output = layer.forward(output)
@@ -66,7 +66,7 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         else:
             wrong.append((x.squeeze(), label, prediction))
     
-    accuracy = correct / samples
+    accuracy = correct / num_of_test_images
     return losses, accuracy, wrong
 
 # GUI setup
@@ -115,7 +115,7 @@ button_wrong = Button(ax_button_wrong, 'Show Wrong Predictions')
 
 def run_training(event):
     global wrong_data
-    samp = int(slider_samples.val)
+    samp = min(int(slider_samples.val), len(mnist.load_data()[0][0]))
     lr = slider_lr.val
     ep = int(slider_epochs.val)
     l2 = check_l2.get_status()[0]
