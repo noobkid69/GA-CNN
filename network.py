@@ -128,6 +128,9 @@ button_wrong = Button(ax_button_wrong, 'Show Wrong Predictions')
 ax_button_correct = fig.add_axes([0.85, 0.2, 0.12, 0.05])
 button_correct = Button(ax_button_correct, 'Show Correct Predictions')
 
+button_correct.label.set_fontsize(6)
+button_wrong.label.set_fontsize(6)
+
 def run_training(event):
     global wrong_data, correct_data
     samp = min(int(slider_samples.val), len(mnist.load_data()[0][0]))
@@ -174,7 +177,7 @@ def show_wrong(event):
         ax_img.axis('off')
         img, true, pred = wrong_data[current_idx[0]]
         ax_img.imshow(img, cmap='gray')
-        ax_img.set_title(f'Wrong Prediction {current_idx[0]+1}/{num_wrong}\nTrue Label: {true}, Predicted: {pred}', fontsize=12, pad=20)
+        ax_img.set_title(f'Wrong Prediction {current_idx[0]+1}/{num_wrong}\nTrue Label: {true}, Predicted: {pred}', fontsize=12)
         fig_wrong.canvas.draw_idle()
     
     def on_prev(event):
@@ -240,7 +243,7 @@ def show_correct(event):
         ax_img.axis('off')
         img, true, pred = correct_data[current_idx[0]]
         ax_img.imshow(img, cmap='gray')
-        ax_img.set_title(f'Correct Prediction {current_idx[0]+1}/{num_correct}\nTrue Label: {true}, Predicted: {pred}', fontsize=12, pad=20)
+        ax_img.set_title(f'Correct Prediction {current_idx[0]+1}/{num_correct}\nTrue Label: {true}, Predicted: {pred}', fontsize=12)
         fig_correct.canvas.draw_idle()
 
     def on_prev(event):
