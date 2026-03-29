@@ -9,6 +9,7 @@ import matplotlib.widgets as widgets
 from matplotlib.widgets import Button, CheckButtons, RadioButtons, Slider
 import numpy as np
 import numpy as np
+import time
 
 def one_hot(y, num_classes=10):
     vec = np.zeros((num_classes, 1))
@@ -26,7 +27,8 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
     x_train = x_train[:samples]
     y_train = y_train_full[:samples]
     y_train = np.array([one_hot(y) for y in y_train])
-    y_test = np.array([one_hot(y) for y in y_test_full[:samples]])
+    # Evaluate on full MNIST test set, always 10k images
+    y_test = np.array([one_hot(y) for y in y_test_full])
 
     l2_lambda = 0.01 if use_l2 else 0.0
     network = [
@@ -36,7 +38,10 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         Dense(5*26*26, 10, l2_lambda=l2_lambda)]
     
     losses = []
-    num_of_test_images = min(100000,len(x_test))
+    num_of_test_images = min(10000,len(x_test)) # Det finns bara 10,000 testbilder i MNIST.
+    print(f"Evaluating on {num_of_test_images} test images")
+    
+    start_time = time.time()
     for e in range(epochs):
         error = 0
         for x, y in zip(x_train, y_train):
@@ -53,8 +58,12 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         losses.append(error)
         print(f"{e} {error}")
     
+    elapsed_time = time.time() - start_time
+    print(f"Training time: {elapsed_time:.2f} seconds")
+    
     correct = 0
     wrong = []
+    correct_predictions = []
     for x, y, idx in zip(x_test[:num_of_test_images], y_test[:num_of_test_images], range(num_of_test_images)):
         output = x
         for layer in network:
@@ -63,11 +72,12 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         label = np.argmax(y)
         if prediction == label:
             correct += 1
+            correct_predictions.append((x.squeeze(), label, prediction))
         else:
             wrong.append((x.squeeze(), label, prediction))
     
     accuracy = correct / num_of_test_images
-    return losses, accuracy, wrong
+    return losses, accuracy, wrong, correct_predictions
 
 # GUI setup
 fig, ax = plt.subplots(figsize=(10, 8))
@@ -85,7 +95,9 @@ use_l2_init = True
 activation_type_init = 'relu'
 
 wrong_data = None
+correct_data = None
 current_wrong_idx = 0
+current_correct_idx = 0
 
 # Widgets
 # Sliders
@@ -107,27 +119,31 @@ ax_radio = fig.add_axes([0.3, 0.2, 0.15, 0.1])
 radio_act = RadioButtons(ax_radio, ['sigmoid', 'relu'], active=1)  # relu active
 
 # Buttons
-ax_button_run = fig.add_axes([0.6, 0.2, 0.15, 0.05])
+ax_button_run = fig.add_axes([0.57, 0.2, 0.12, 0.05])
 button_run = Button(ax_button_run, 'Run Model')
 
-ax_button_wrong = fig.add_axes([0.8, 0.2, 0.15, 0.05])
+ax_button_wrong = fig.add_axes([0.71, 0.2, 0.12, 0.05])
 button_wrong = Button(ax_button_wrong, 'Show Wrong Predictions')
 
+ax_button_correct = fig.add_axes([0.85, 0.2, 0.12, 0.05])
+button_correct = Button(ax_button_correct, 'Show Correct Predictions')
+
 def run_training(event):
-    global wrong_data
+    global wrong_data, correct_data
     samp = min(int(slider_samples.val), len(mnist.load_data()[0][0]))
     lr = slider_lr.val
     ep = int(slider_epochs.val)
     l2 = check_l2.get_status()[0]
     act = radio_act.value_selected
     print(f"Running with samples={samp}, lr={lr}, epochs={ep}, l2={l2}, activation={act}")
-    losses, acc, wrong = train_model(samp, lr, ep, l2, act)
+    losses, acc, wrong, correct = train_model(samp, lr, ep, l2, act)
     line.set_data(range(len(losses)), losses)
     ax_loss.relim()
     ax_loss.autoscale_view()
     ax_loss.set_title(f'Training Loss (Accuracy: {acc:.2%})')
     fig.canvas.draw_idle()
     wrong_data = wrong
+    correct_data = correct
     print(f"Training complete. Accuracy: {acc:.2%}")
 
 def show_wrong(event):
@@ -142,8 +158,9 @@ def show_wrong(event):
     current_idx = [0]  # Use list to allow modification in nested functions
     
     fig_wrong = plt.figure(figsize=(8, 6))
-    ax_img = fig_wrong.add_subplot(111)
+    ax_img = fig_wrong.add_axes([0.1, 0.2, 0.8, 0.75])
     ax_img.axis('off')
+    ax_img.set_zorder(0)
     
     # Buttons
     ax_prev = fig_wrong.add_axes([0.2, 0.05, 0.1, 0.075])
@@ -157,7 +174,7 @@ def show_wrong(event):
         ax_img.axis('off')
         img, true, pred = wrong_data[current_idx[0]]
         ax_img.imshow(img, cmap='gray')
-        ax_img.set_title(f'Wrong Prediction {current_idx[0]+1}/{num_wrong}\nTrue Label: {true}, Predicted: {pred}', fontsize=12)
+        ax_img.set_title(f'Wrong Prediction {current_idx[0]+1}/{num_wrong}\nTrue Label: {true}, Predicted: {pred}', fontsize=12, pad=20)
         fig_wrong.canvas.draw_idle()
     
     def on_prev(event):
@@ -181,11 +198,89 @@ def show_wrong(event):
     button_prev.on_clicked(on_prev)
     button_next.on_clicked(on_next)
     fig_wrong.canvas.mpl_connect('key_press_event', on_key)
+
+    def on_button_click(event):
+        if event.inaxes is ax_prev:
+            print('Wrong: clicked prev button')
+            on_prev(event)
+        elif event.inaxes is ax_next:
+            print('Wrong: clicked next button')
+            on_next(event)
+
+    fig_wrong.canvas.mpl_connect('button_press_event', on_button_click)
     
     update_image()  # Show first image
     plt.show()
 
+
+def show_correct(event):
+    if correct_data is None:
+        print("Please run the model first to generate predictions.")
+        return
+    num_correct = len(correct_data)
+    if num_correct == 0:
+        print("No correct predictions!")
+        return
+
+    current_idx = [0]  # Use list to allow modification in nested functions
+
+    fig_correct = plt.figure(figsize=(8, 6))
+    ax_img = fig_correct.add_axes([0.1, 0.2, 0.8, 0.75])
+    ax_img.axis('off')
+    ax_img.set_zorder(0)
+
+    ax_prev = fig_correct.add_axes([0.2, 0.05, 0.1, 0.075])
+    button_prev = Button(ax_prev, 'Previous', color='lightblue')
+
+    ax_next = fig_correct.add_axes([0.7, 0.05, 0.1, 0.075])
+    button_next = Button(ax_next, 'Next', color='lightblue')
+
+    def update_image():
+        ax_img.clear()
+        ax_img.axis('off')
+        img, true, pred = correct_data[current_idx[0]]
+        ax_img.imshow(img, cmap='gray')
+        ax_img.set_title(f'Correct Prediction {current_idx[0]+1}/{num_correct}\nTrue Label: {true}, Predicted: {pred}', fontsize=12, pad=20)
+        fig_correct.canvas.draw_idle()
+
+    def on_prev(event):
+        if current_idx[0] > 0:
+            current_idx[0] -= 1
+            update_image()
+
+    def on_next(event):
+        if current_idx[0] < num_correct - 1:
+            current_idx[0] += 1
+            update_image()
+
+    def on_key(event):
+        if event.key == 'left' and current_idx[0] > 0:
+            current_idx[0] -= 1
+            update_image()
+        elif event.key == 'right' and current_idx[0] < num_correct - 1:
+            current_idx[0] += 1
+            update_image()
+
+    button_prev.on_clicked(on_prev)
+    button_next.on_clicked(on_next)
+    fig_correct.canvas.mpl_connect('key_press_event', on_key)
+
+    def on_button_click(event):
+        if event.inaxes is ax_prev:
+            print('Correct: clicked prev button')
+            on_prev(event)
+        elif event.inaxes is ax_next:
+            print('Correct: clicked next button')
+            on_next(event)
+
+    fig_correct.canvas.mpl_connect('button_press_event', on_button_click)
+
+    update_image()
+    plt.show()
+
+
 button_run.on_clicked(run_training)
 button_wrong.on_clicked(show_wrong)
+button_correct.on_clicked(show_correct)
 
 plt.show()
