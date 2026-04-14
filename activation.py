@@ -1,6 +1,6 @@
 import numpy as np 
 def sigmoid(x):
-      return 1/(1+np.exp(-x))
+    return 1/(1+np.exp(-x))
 def sigmoid_prime(x):
     s = sigmoid(x)
     return s*(1-s)
@@ -33,7 +33,7 @@ class Activation():
     return self.output
   def backward(self, output_gradient, learning_rate):
     if self.type == "softmax":
-      # when used with cross entropy this simplifies
+      # förenklas med cross entropy
       return output_gradient
 
     return np.multiply(output_gradient, sigmoid_prime(self.input))

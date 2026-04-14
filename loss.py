@@ -7,7 +7,6 @@ def binary_cross_entropy_prime(y_true, y_pred):
     y_pred = np.clip(y_pred, 1e-7, 1 - 1e-7)
     return ((1 - y_true) / (1 - y_pred) - y_true / y_pred) / np.size(y_true)
 def categorical_cross_entropy(y_true, logits):
-    exp = np.exp(logits - np.max(logits))
     probs = softmax(logits)
     return -np.sum(y_true * np.log(probs + 1e-9))
 
