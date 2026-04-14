@@ -80,7 +80,7 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
     return losses, accuracy, wrong, correct_predictions
 
 # GUI setup
-fig, ax = plt.subplots(figsize=(10, 8))
+fig = plt.figure(figsize=(10, 8))
 ax_loss = fig.add_subplot(2, 1, 1)
 ax_loss.set_title('Training Loss')
 ax_loss.set_xlabel('Epoch')
