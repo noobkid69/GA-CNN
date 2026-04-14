@@ -36,7 +36,13 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         Activation(activation_type),
         Reshape((5, 26, 26), (5*26*26, 1)),
         Dense(5*26*26, 10, l2_lambda=l2_lambda)]
-    
+    network2 = [Convolutional((1, 28, 28), 3, 5),
+                Activation(activation_type),
+                Reshape((5, 26, 26), (5*26*26, 1)),
+                Dense(5*26*26, 64, l2_lambda=l2_lambda),
+                Activation(activation_type),
+                Dense(64, 10, l2_lambda=l2_lambda)]
+    training_network = network2
     losses = []
     num_of_test_images = min(10000,len(x_test)) # Det finns bara 10,000 testbilder i MNIST.
     print(f"Evaluating on {num_of_test_images} test images")
@@ -47,12 +53,12 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
         for x, y in zip(x_train, y_train):
             output = x
             # forward pass
-            for layer in network:
+            for layer in training_network:
                 output = layer.forward(output)
             error += categorical_cross_entropy(y, output)
             # backward pass
             grad = categorical_cross_entropy_prime(y, output)
-            for layer in reversed(network):
+            for layer in reversed(training_network):
                 grad = layer.backward(grad, learning_rate)
         error /= len(x_train)
         losses.append(error)
@@ -66,7 +72,7 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
     correct_predictions = []
     for x, y, idx in zip(x_test[:num_of_test_images], y_test[:num_of_test_images], range(num_of_test_images)):
         output = x
-        for layer in network:
+        for layer in training_network:
             output = layer.forward(output)
         prediction = np.argmax(output)
         label = np.argmax(y)

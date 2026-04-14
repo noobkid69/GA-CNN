@@ -32,9 +32,11 @@ class Activation():
     self.output = self.func(input)
     return self.output
   def backward(self, output_gradient, learning_rate):
+    
     if self.type == "softmax":
-      # förenklas med cross entropy
-      return output_gradient
-
-    return np.multiply(output_gradient, sigmoid_prime(self.input))
+        return output_gradient
+    elif self.type == "relu":
+        return np.multiply(output_gradient, relu_prime(self.input))
+    elif self.type == "sigmoid":
+        return np.multiply(output_gradient, sigmoid_prime(self.input))
 
