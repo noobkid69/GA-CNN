@@ -63,7 +63,7 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
     Dense(64, 10, l2_lambda=l2_lambda)
 ]
 
-    training_network = network2
+    training_network = network3
     losses = []
     num_of_test_images = min(10000,len(x_test)) # Det finns bara 10,000 testbilder i MNIST.
     print(f"Evaluating on {num_of_test_images} test images")
@@ -157,6 +157,7 @@ button_correct = Button(ax_button_correct, 'Show Correct Predictions')
 
 button_correct.label.set_fontsize(6)
 button_wrong.label.set_fontsize(6)
+
 
 def run_training(event):
     global wrong_data, correct_data

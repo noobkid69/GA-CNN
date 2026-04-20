@@ -11,7 +11,8 @@ class Dense():
         return np.dot(self.weights, input) + self.bias
 
     def backward(self, output_gradient, learning_rate):
-        weights_gradient = np.dot(output_gradient, self.input.T)
+        weights_gradient = np.dot(output_gradient, self.input.T) / np.size(self.input)
+
 
         weights_gradient += self.l2_lambda * self.weights  # L2 regularization
 
