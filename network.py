@@ -42,6 +42,27 @@ def train_model(samples, learning_rate, epochs, use_l2, activation_type):
                 Dense(5*26*26, 64, l2_lambda=l2_lambda),
                 Activation(activation_type),
                 Dense(64, 10, l2_lambda=l2_lambda)]
+    network3 = [
+    # 2 Faltningslager
+    Convolutional((1, 28, 28), 3, 8),
+    Activation(activation_type),
+    Convolutional((8, 26, 26), 3, 16),
+    Activation(activation_type),
+    
+    Reshape((16, 24, 24), (16*24*24, 1)), # Flatten
+
+    # Antalet noder i dense-lagrena minskar succcessivt för att tvinga nätverket att lära sig mer kompakta representationer (eller nåt)
+    Dense(16*24*24, 256, l2_lambda=l2_lambda),
+    Activation(activation_type),
+    Dense(256, 128, l2_lambda=l2_lambda),
+    Activation(activation_type),
+    Dense(128, 64, l2_lambda=l2_lambda),
+    Activation(activation_type),
+    
+    # Output lager
+    Dense(64, 10, l2_lambda=l2_lambda)
+]
+
     training_network = network2
     losses = []
     num_of_test_images = min(10000,len(x_test)) # Det finns bara 10,000 testbilder i MNIST.
