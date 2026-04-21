@@ -9,7 +9,7 @@ class Convolutional():
     self.input_depth = input_depth
     self.output_shape = (depth, input_height-kernel_size+1,input_width-kernel_size+1)
     self.kernels_shape = (depth, input_depth, kernel_size, kernel_size)
-    self.kernels = np.random.randn(*self.kernels_shape)
+    self.kernels = np.random.randn(*self.kernels_shape) * np.sqrt(2 / (input_depth * kernel_size * kernel_size)) # he initialization
     self.biases = np.random.randn(*self.output_shape)
   def forward(self, input):
     self.input = input

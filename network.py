@@ -132,7 +132,7 @@ ax_slider_samples = fig.add_axes([0.1, 0.05, 0.65, 0.03])
 slider_samples = Slider(ax_slider_samples, 'Samples', 1000, 60000, valinit=samples_init, valstep=1000)
 
 ax_slider_lr = fig.add_axes([0.1, 0.1, 0.65, 0.03])
-slider_lr = Slider(ax_slider_lr, 'Learning Rate', 0.001, 0.1, valinit=learning_rate_init)
+slider_lr = Slider(ax_slider_lr, 'Learning Rate', 0.0003, 0.1, valinit=learning_rate_init)
 
 ax_slider_epochs = fig.add_axes([0.1, 0.15, 0.65, 0.03])
 slider_epochs = Slider(ax_slider_epochs, 'Epochs', 10, 200, valinit=epochs_init, valstep=10)
